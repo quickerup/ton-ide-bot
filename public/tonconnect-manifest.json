@@ -1,0 +1,8 @@
+{
+  "name": "TON IDE Bot",
+  "description": "Telegram-based TON contract compiler and deployment assistant.",
+  "icons": ["https://your-host.example.com/assets/icon.png"],
+  "url": "https://your-host.example.com",
+  "redirect": ["https://your-host.example.com/tonconnect-callback"],
+  "permissions": ["ton_sendTransaction", "ton_requestAccounts"]
+}

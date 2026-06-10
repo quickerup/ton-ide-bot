@@ -1,0 +1,8 @@
+
+> ton-ide-bot@0.1.0 start
+> node dist/app.js
+
+2026-06-10 00:43:29 [info] Starting TON IDE bot...
+2026-06-10 00:43:29 [info] Status server listening at http://127.0.0.1:3001
+2026-06-10 00:43:29 [info] Using in-memory Redis mock
+2026-06-10 00:43:29 [info] Launching bot in polling mode

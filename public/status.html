@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TON IDE Bot Status</title>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, sans-serif; background: #111827; color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    h1 { margin-bottom: 0.5rem; }
+    .note { color: #94a3b8; margin-bottom: 1.5rem; }
+    .box { background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 18px; margin-bottom: 18px; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
+    .badge { display: inline-block; margin-right: 0.5rem; padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.8rem; }
+    .info { background: #0f766e; color: #d1fae5; }
+    .debug { background: #2563eb; color: #dbeafe; }
+    .warn { background: #f59e0b; color: #fff7ed; }
+    .error { background: #dc2626; color: #fee2e2; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TON IDE Bot Status</h1>
+    <p class="note">This page watches bot events and updates automatically. Refreshes every 2 seconds.</p>
+
+    <div class="box">
+      <strong>Host:</strong> <span>localhost</span><br />
+      <strong>API:</strong> <code>/api/status</code>
+      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button id="copyAll" style="border: none; background: #2563eb; color: white; padding: 10px 14px; border-radius: 8px; cursor: pointer;">Copy full status</button>
+        <span id="copyFeedback" style="color: #a5b4fc; font-size: 0.95rem; align-self: center;"></span>
+      </div>
+    </div>
+
+    <div id="events"></div>
+  </div>
+
+  <script>
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const payload = await res.json();
+        const events = payload.events || [];
+        const container = document.getElementById('events');
+        if (!container) return;
+
+        container.innerHTML = events.map((event) => {
+          const badgeClass = event.level === 'error' ? 'error' : event.level === 'warn' ? 'warn' : event.level === 'debug' ? 'debug' : 'info';
+          const meta = event.meta && Object.keys(event.meta).length ? `<pre>${JSON.stringify(event.meta, null, 2)}</pre>` : '';
+          return `
+            <div class="box">
+              <div><span class="badge ${badgeClass}">${event.level}</span><strong>${event.source}</strong> • ${new Date(event.timestamp).toLocaleTimeString()}</div>
+              <div>${event.message}</div>
+              ${meta}
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        const container = document.getElementById('events');
+        if (container) {
+          container.innerHTML = `<div class="box"><strong>Error loading status:</strong> ${error.message}</div>`;
+        }
+      }
+    }
+
+    async function copyAllStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const payload = await res.json();
+        const text = payload.events
+          .map((event) => {
+            const meta = event.meta && Object.keys(event.meta).length ? `\n${JSON.stringify(event.meta, null, 2)}` : "";
+            return `${event.timestamp} [${event.level}] ${event.source} - ${event.message}${meta}`;
+          })
+          .join("\n\n");
+
+        await navigator.clipboard.writeText(text);
+        const feedback = document.getElementById('copyFeedback');
+        if (feedback) {
+          feedback.textContent = 'Copied to clipboard';
+          setTimeout(() => { feedback.textContent = ''; }, 2500);
+        }
+      } catch (error) {
+        const feedback = document.getElementById('copyFeedback');
+        if (feedback) {
+          feedback.textContent = 'Copy failed';
+        }
+      }
+    }
+
+    document.getElementById('copyAll')?.addEventListener('click', copyAllStatus);
+    loadStatus();
+    setInterval(loadStatus, 2000);
+  </script>
+</body>
+</html>
